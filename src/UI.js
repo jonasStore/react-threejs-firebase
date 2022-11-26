@@ -60,6 +60,7 @@ let temp_tapware = null;
 let temp_shower = null;
 let model;
 let temp_model;
+let side_view_type;
 
 let obtainedObjectColor = null;
 
@@ -102,6 +103,12 @@ const camera = new THREE.PerspectiveCamera(
   50
 );
 function initCamera() {
+  console.log("initCamera\n");
+
+  orthoCam.position.y = STORE.Width + DELTA_DIS;
+  orthoCam.position.z = 0;
+  orthoCam.position.x = 0;
+
   camera.position.y = 10;
   camera.position.z = 8;
   scene.add(camera);
@@ -129,7 +136,7 @@ const orthoCam = new THREE.OrthographicCamera(
   window.innerWidth / 2,
   window.innerHeight / 2,
   -window.innerHeight / 2,
-  0,
+  0.01,
   20
 );
 
@@ -147,7 +154,7 @@ var light_8;
 
 function init() {
   // const orthoCam = new THREE.OrthographicCamera(-frustum, frustum, frustum, -frustum, 0, 30);
-  // console.log("I am here!");
+  console.log("init\n");
   orthoCam.zoom = STORE.Scale * 100;
   mapControls = new MapControls(orthoCam, labelRenderer.domElement);
 
@@ -186,52 +193,6 @@ window.addEventListener("wheel", function (event) {
   GenerateMeasurements();
 });
 
-// function initLight() {
-//   const Ambientlight = new THREE.AmbientLight("white", 0.1); // soft white light
-//   /*
-//   const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
-//   scene.add( directionalLight );
-//   directionalLight.position.set(0,2,0);
-
-//   const light = new THREE.HemisphereLight( 0xffffff, "", 0.5 );
-//   scene.add( light );
-//   light.position.set(0,2,0);
-//   */
-//   global_light = new THREE.HemisphereLight("white", "", 0.5);
-//   global_light.position.set(0, STORE.Height, 0);
-
-//   light_1 = new THREE.PointLight("white", 0.1, 0, 1);
-//   light_2 = new THREE.PointLight("white", 0.2, 0, 1);
-//   light_3 = new THREE.PointLight("white", 0.2, 0, 1);
-//   light_4 = new THREE.PointLight("white", 0.2, 0, 1);
-//   light_5 = new THREE.PointLight("white", 0.2, 0, 1);
-//   light_6 = new THREE.PointLight("white", 0.2, 0, 1);
-//   light_7 = new THREE.PointLight("white", 0.2, 0, 1);
-//   light_8 = new THREE.PointLight("white", 0.2, 0, 1);
-
-//   light_1.position.set(0, STORE.Height / 2, 0);
-//   light_2.position.set(STORE.Width / 2, STORE.Height / 2, 0);
-//   light_3.position.set(STORE.Width, 1, 0);
-//   light_4.position.set(-STORE.Width, 1, 0);
-//   light_5.position.set(0, 1, STORE.Height);
-//   light_6.position.set(0, 1, -STORE.Height);
-//   light_7.position.set(0, 0, STORE.Height);
-//   light_8.position.set(0, 0, -STORE.Height);
-
-//   scene.add(
-//     global_light,
-//     light_1,
-//     light_2,
-//     light_3,
-//     light_4,
-//     light_5,
-//     light_6,
-//     light_7,
-//     light_8
-//   );
-// }
-
-// const box = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial({ side: THREE.BackSide, transparent: true, color :'white' }));
 
 function initLight() {
   const Ambientlight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.7); // soft white light
@@ -302,7 +263,7 @@ function DragObject(vec3, object, selectedwall) {
   const zz = STORE.length / 2000;
   const cz = STORE.clength / 1000;
   const yy = STORE.height / 1000;
-  // // console.log('init:',selectedwall.userData.dir);
+
   let minX = -xx, maxX = xx;
   let minZ = -zz, maxZ = zz;
 
@@ -315,7 +276,7 @@ function DragObject(vec3, object, selectedwall) {
     xlength = ow;
     zlength = oz;
   }
-  // console.log(vec3, ow, oz, oy, ":", xx, zz, ":", STORE.cwidth, STORE.clength, ":", object.rotation.y);
+
   if (object.userData.type === "door") oz = 0;
   switch (STORE.type) {
     case 2:
@@ -337,7 +298,7 @@ function DragObject(vec3, object, selectedwall) {
   }
   switch (selectedwall.userData.normalAxis) {
     case AXIS.X:
-      console.log(selectedwall);
+
       object.userData.normalAxis = AXIS.X;
 
       if (selectedwall.userData.dir == DIR.START) {
@@ -354,7 +315,7 @@ function DragObject(vec3, object, selectedwall) {
       [object.position.z, margin] = adjustCorner(vec3.z, minZ, maxZ, ow);
       if (vec3.y + oy > yy) object.position.y = yy - oy;
       else object.position.y = vec3.y;
-      console.log('x\n');
+
       break;
     case AXIS.Z:
       object.userData.normalAxis = AXIS.Z;
@@ -372,10 +333,10 @@ function DragObject(vec3, object, selectedwall) {
       [object.position.z, margin] = adjustCorner(vec3.z, minZ, maxZ, oz);
       if (vec3.y + oy > yy) object.position.y = yy - oy;
       else object.position.y = vec3.y;
-      console.log('z\n');
+
       break;
     case AXIS.Y:
-      console.log(Math.abs(object.rotation.y), - Math.PI / 2.0);
+
       if (Math.abs(object.rotation.y) - Math.PI / 2.0) {
         [object.position.x, margin] = adjustCorner(vec3.x, minX, maxX, xlength);
         [object.position.z, margin] = adjustCorner(vec3.z, minZ, maxZ, zlength);
@@ -411,6 +372,7 @@ function isFacingCamera(object) {
 }
 
 function animate() {
+  // console.log("animate\n");
   rayWalls = [];
   for (let index = 0; index < walls_group.length; index++) {
     if (walls_group[index].material.visible) isFacingCamera(walls_group[index]);
@@ -446,6 +408,7 @@ var temp_object = null;
 var temp_object_real = null;
 
 const onmousedown = (e) => {
+  // console.log("mouseDown\n");
   isMouseDown = true;
 
   const rect = renderer.domElement.getBoundingClientRect();
@@ -574,6 +537,7 @@ const onmouseup = (e) => {
 };
 
 const onmousemove = (e) => {
+  // console.log("onMouseMove\n");
   const rect = renderer.domElement.getBoundingClientRect();
   mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -643,7 +607,7 @@ function Update() {
 }
 
 function createWalls(type, material) {
-  // console.log("material: ", material);
+  console.log("createWall\n");
   for (let index = 0; index < walls_group.length; index++) {
     scene.remove(walls_group[index]);
   }
@@ -1024,21 +988,26 @@ function createWalls(type, material) {
       material
     )
   );
-  for (let index = 0; index < walls_group.length; index++) {
-    scene.add(walls_group[index]);
-    // if(STORE.view ===1 ){
-    //     walls_group[index].onBeforeRender = onBeforeRender;
-    //     walls_group[index].onAfterRender = onAfterRender;
-    // }
+  if (STORE.view == 0 && side_view_type >= 1) {
+    // console.log('SideView',side_view_type);
+    scene.add(walls_group[side_view_type - 1]);
   }
+  else
+    for (let index = 0; index < walls_group.length; index++) {
+      scene.add(walls_group[index]);
+    }
 }
 
 function GenerateBathroom() {
-  orthoCam.position.y = STORE.Height + DELTA_DIS;
+  console.log("generateRoom\n");
+
+
+  // console.log('orcamPos', orthoCam.position, orthoCam.left, orthoCam.right, orthoCam.top, orthoCam.bottom);
   createWalls(STORE.type, STORE.material);
 }
 
 function GenerateMeasurements() {
+  console.log("generateMeasurements\n");
   document.getElementById("measures").append(labelRenderer.domElement);
 
   for (let index = 0; index < dims.length; index++) {
@@ -1046,16 +1015,6 @@ function GenerateMeasurements() {
   }
   dims = [];
   if (STORE.view !== 1)
-    new Dimensions(
-      scene,
-      dims,
-      orthoCam,
-      labelRenderer.domElement,
-      STORE.type,
-      temp_object
-    );
-
-  if (STORE.view == 2)
     new Dimensions(
       scene,
       dims,
@@ -1456,6 +1415,11 @@ const UI = observer(() => {
   }
 
   function setpanel1() {
+    STORE.view = 0;
+    side_view_type = 0;
+    orthoCam.position.y = STORE.Height + DELTA_DIS;
+    orthoCam.position.z = 0;
+    orthoCam.position.x = 0;
     Setpanel(false);
   }
 
@@ -1643,32 +1607,81 @@ const UI = observer(() => {
     selectedObject.position.z = positionVector.z;
   }
 
-  function CameraTop() {
-    STORE.view = 2;
-  }
-
-  function Change2D() {
-    switch (STORE.view) {
+  function SideViewCamera(type, wall) {
+    console.log("camera");
+    side_view_type = wall;
+    STORE.view = 0;
+    switch (type) {
+      case 0:
+        orthoCam.position.z = (STORE.Length);
+        orthoCam.position.y = 0;
+        orthoCam.position.x = 0;
+        break;
+      case 1:
+        orthoCam.position.z = (-STORE.Length);
+        orthoCam.position.y = 0;
+        orthoCam.position.x = 0;
+        break;
       case 2:
-        document.getElementById('view1').style.display = "block";
+        orthoCam.position.x = STORE.Width;
+        orthoCam.position.y = 0;
+        orthoCam.position.z = 0;
         break;
-
       case 3:
-
+        orthoCam.position.x = -(STORE.Width);
+        orthoCam.position.y = 0;
+        orthoCam.position.z = 0;
         break;
-
-      case 4:
-
-        break;
-
-      case 5:
-
-        break;
-
       default:
-        break;
     }
+    // orthoCam.left = min;
+    // orthoCam.right = max;
+    // orthoCam.top = 0;
+    // orthoCam.buttom = STORE.Length;
   }
+
+
+
+  const sidePanel = [
+    (< div id="view1" className="view" >
+      <div className="top" onClick={() => SideViewCamera(0, 3)}></div>
+      <div className="right" onClick={() => SideViewCamera(3, 2)}></div>
+      <div className="bottom" onClick={() => SideViewCamera(1, 4)}></div>
+      <div className="left" onClick={() => SideViewCamera(2, 1)}></div>
+    </div >),
+    (<div id="view2" className="view">
+      <div className="top" onClick={() => SideViewCamera(0, 3)}></div>
+      <div className="cright" onClick={() => SideViewCamera(3, 2)}></div>
+      <div className="cright1" onClick={() => SideViewCamera(3, 6)}></div>
+      <div className="cbottom" onClick={() => SideViewCamera(1, 4)}></div>
+      <div className="cbottom1" onClick={() => SideViewCamera(1, 5)}></div>
+      <div className="left" onClick={() => SideViewCamera(2, 1)}></div>
+    </div>),
+    (<div id="view3" className="view">
+      <div className="top" onClick={() => SideViewCamera(0, 3)}></div>
+      <div className="right" onClick={() => SideViewCamera(3, 2)}></div>
+      <div className="cleft" onClick={() => SideViewCamera(2, 1)}></div>
+      <div className="cleft1" onClick={() => SideViewCamera(2, 6)}></div>
+      <div className="cbottom2" onClick={() => SideViewCamera(1, 4)}></div>
+      <div className="cbottom3" onClick={() => SideViewCamera(1, 5)}></div>
+    </div>),
+    (<div id="view4" className="view">
+      <div className="ctop" onClick={() => SideViewCamera(0, 3)}></div>
+      <div className="ctop1" onClick={() => SideViewCamera(0, 5)}></div>
+      <div className="cright2" onClick={() => SideViewCamera(3, 6)}></div>
+      <div className="cright3" onClick={() => SideViewCamera(3, 2)}></div>
+      <div className="bottom" onClick={() => SideViewCamera(1, 4)}></div>
+      <div className="left" onClick={() => SideViewCamera(2, 1)}></div>
+    </div>),
+    (<div id="view5" className="view">
+      <div className="ctop2" onClick={() => SideViewCamera(0, 3)}></div>
+      <div className="ctop3" onClick={() => SideViewCamera(0, 5)}></div>
+      <div className="cleft2" onClick={() => SideViewCamera(2, 6)}></div>
+      <div className="cleft3" onClick={() => SideViewCamera(2, 1)}></div>
+      <div className="bottom" onClick={() => SideViewCamera(1, 4)}></div>
+      <div className="right" onClick={() => SideViewCamera(3, 2)}></div>
+    </div>)
+  ];
 
   return (
     <div className="container vh-100 overflow-auto">
@@ -1734,7 +1747,7 @@ const UI = observer(() => {
                         STORE.clength
                       );
                       STORE.type = type;
-                      Change2D();
+
                     }}
                     key={type}
                     className="px-4 py-3 bg-white rounded-1 m-2 hover shadow"
@@ -2432,7 +2445,10 @@ const UI = observer(() => {
           >
             <div>
               <img
-                onClick={(e) => (STORE.view = 0)}
+                onClick={(e) => {
+                  STORE.view = 0;
+                  side_view_type = 0;
+                }}
                 className={
                   (STORE.view === 0 ? "active " : "") +
                   "btn p-2 bg-light m-3 rounded-1 padding"
@@ -2507,60 +2523,7 @@ const UI = observer(() => {
                 <>
                   <div className="panel" style={{ left: window.innerWidth - 480 }}>
                     <div className="panel-ground">
-                      <div id="view1">
-                        <div className="top" onClick={CameraTop}></div>
-                        <div className="right"></div>
-                        <div className="bottom"></div>
-                        <div className="left"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="panel" style={{ left: window.innerWidth - 480 }}>
-                    <div className="panel-ground">
-                      <div id="view2">
-                        <div className="top" onClick={CameraTop}></div>
-                        <div className="cright"></div>
-                        <div className="cright1"></div>
-                        <div className="cbottom"></div>
-                        <div className="cbottom1"></div>
-                        <div className="left"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="panel" style={{ left: window.innerWidth - 480 }}>
-                    <div className="panel-ground">
-                      <div id="view3">
-                        <div className="top" onClick={CameraTop}></div>
-                        <div className="right"></div>
-                        <div className="cleft"></div>
-                        <div className="cleft1"></div>
-                        <div className="cbottom2"></div>
-                        <div className="cbottom3"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="panel" style={{ left: window.innerWidth - 480 }}>
-                    <div className="panel-ground">
-                      <div id="view4">
-                        <div className="ctop" onClick={CameraTop}></div>
-                        <div className="ctop1"></div>
-                        <div className="cright2"></div>
-                        <div className="cright3"></div>
-                        <div className="bottom"></div>
-                        <div className="left"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="panel" style={{ left: window.innerWidth - 480 }}>
-                    <div className="panel-ground">
-                      <div id="view5">
-                        <div className="ctop2" onClick={CameraTop}></div>
-                        <div className="ctop3"></div>
-                        <div className="cleft2"></div>
-                        <div className="cleft3"></div>
-                        <div className="bottom"></div>
-                        <div className="right"></div>
-                      </div>
+                      {sidePanel[STORE.type - 1]}
                     </div>
                   </div>
                 </>

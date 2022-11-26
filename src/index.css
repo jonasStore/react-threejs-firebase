@@ -777,12 +777,8 @@ h6:hover {
   z-index: 100;
 }
 
-#view1, #view2, #view3, #view4, #view5 {
+.view {
   position: relative;
   height: 100%;
   width: 100%;
-}
-
-#view1, #view3, #view4, #view5 {
-  display: none;
 }
